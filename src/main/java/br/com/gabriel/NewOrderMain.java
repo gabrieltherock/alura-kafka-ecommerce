@@ -1,5 +1,6 @@
 package br.com.gabriel;
 
+import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -15,15 +16,20 @@ public class NewOrderMain {
             var value = "12333, 133332, 182928";
             var producerRecord = new ProducerRecord<>("ECOMMERCE_NEW_ORDER", value, value);
 
-            producer.send(producerRecord, (data, e) -> {
+            var email = "Welcome! We are processing your order.";
+            var emailRecord = new ProducerRecord<>("ECOMMERCE_SEND_EMAIL", email, email);
+
+            Callback callback = (data, e) -> {
                 if (e != null) {
                     e.printStackTrace();
                     return;
                 }
-
                 System.out.println("SUCESSO --> " + data.topic() + ":::partition " + data.partition() + "/ offset "
                         + data.offset() + "/ " + data.timestamp());
-            }).get();
+            };
+
+            producer.send(producerRecord, callback).get();
+            producer.send(emailRecord, callback).get();
         }
     }
 

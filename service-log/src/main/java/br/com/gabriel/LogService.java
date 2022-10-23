@@ -1,6 +1,5 @@
-package br.com.gabriel.service;
+package br.com.gabriel;
 
-import br.com.gabriel.kafka.KafkaService;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;

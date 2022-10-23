@@ -1,4 +1,4 @@
-package br.com.gabriel.kafka;
+package br.com.gabriel;
 
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;

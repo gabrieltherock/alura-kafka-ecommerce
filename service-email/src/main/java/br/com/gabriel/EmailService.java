@@ -1,7 +1,5 @@
-package br.com.gabriel.service;
+package br.com.gabriel;
 
-import br.com.gabriel.Email;
-import br.com.gabriel.kafka.KafkaService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.util.Map;
@@ -13,13 +11,13 @@ public class EmailService {
         try (var kafkaService = new KafkaService<>(EmailService.class.getSimpleName(),
                 "ECOMMERCE_SEND_EMAIL",
                 emailService::parse,
-                Email.class,
+                String.class,
                 Map.of())) {
             kafkaService.run();
         }
     }
 
-    private void parse(ConsumerRecord<String, Email> consumerRecord) {
+    private void parse(ConsumerRecord<String, String> consumerRecord) {
         System.out.println("----------------------------------------------");
         System.out.println("Enviando email...");
         System.out.println("KEY --> " + consumerRecord.key());

@@ -1,4 +1,4 @@
-package br.com.gabriel.kafka;
+package br.com.gabriel;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

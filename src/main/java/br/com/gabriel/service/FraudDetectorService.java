@@ -1,5 +1,6 @@
 package br.com.gabriel.service;
 
+import br.com.gabriel.Order;
 import br.com.gabriel.kafka.KafkaService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -7,13 +8,13 @@ public class FraudDetectorService {
 
     public static void main(String[] args) {
         var fraudDetectorService = new FraudDetectorService();
-        try (var kafkaService = new KafkaService(FraudDetectorService.class.getSimpleName(),
-                "ECOMMERCE_SEND_EMAIL", fraudDetectorService::parse)) {
+        try (var kafkaService = new KafkaService<>(FraudDetectorService.class.getSimpleName(),
+                "ECOMMERCE_NEW_ORDER", fraudDetectorService::parse, Order.class)) {
             kafkaService.run();
         }
     }
 
-    private void parse(ConsumerRecord<String, String> consumerRecord) {
+    private void parse(ConsumerRecord<String, Order> consumerRecord) {
         System.out.println("---------------------------------------------");
         System.out.println("Processando um novo pedido...");
         System.out.println("KEY --> " + consumerRecord.key());

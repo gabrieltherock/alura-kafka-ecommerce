@@ -1,4 +1,4 @@
-package br.com.gabriel.serializer;
+package br.com.gabriel.kafka;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

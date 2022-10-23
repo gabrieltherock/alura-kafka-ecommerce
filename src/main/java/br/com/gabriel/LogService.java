@@ -1,48 +1,23 @@
 package br.com.gabriel;
 
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.serialization.StringDeserializer;
-
-import java.time.Duration;
-import java.util.Properties;
-import java.util.regex.Pattern;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public class LogService {
 
-    public static void main(String[] args) throws InterruptedException {
-        try (var kafkaConsumer = new KafkaConsumer<String, String>(properties())) {
-            kafkaConsumer.subscribe(Pattern.compile("ECOMMERCE.*"));
+    public static void main(String[] args) {
+        var logService = new LogService();
+        var kafkaService = new KafkaService(LogService.class.getSimpleName(), "ECOMMERCE_SEND_EMAIL", logService::parse);
 
-            while (true) {
-                var newOrderRecords = kafkaConsumer.poll(Duration.ofMillis(100));
-
-                if (newOrderRecords.isEmpty())
-                    continue;
-
-                System.out.println("Encontrei " + newOrderRecords.count() + " registros e vou processa-los...");
-                for (var newOrderRecord : newOrderRecords) {
-                    System.out.println("--------------------------------------------");
-                    System.out.println("LOG");
-                    System.out.println(newOrderRecord.key());
-                    System.out.println(newOrderRecord.value());
-                    System.out.println(newOrderRecord.partition());
-                    System.out.println(newOrderRecord.offset());
-                    System.out.println("--------------------------------------------");
-                    Thread.sleep(5000);
-                }
-            }
-        }
+        kafkaService.run();
     }
 
-    private static Properties properties() {
-        var properties = new Properties();
-
-        properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092");
-        properties.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        properties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        properties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, LogService.class.getSimpleName());
-
-        return properties;
+    private void parse(ConsumerRecord<String, String> consumerRecord) {
+        System.out.println("----------------------------------------------");
+        System.out.println("Logando tudo...");
+        System.out.println("KEY --> " + consumerRecord.key());
+        System.out.println("VALUE --> " + consumerRecord.value());
+        System.out.println("PARTITION --> " + consumerRecord.partition());
+        System.out.println("OFFSET --> " + consumerRecord.offset());
+        System.out.println("--------------------------------------------");
     }
 }

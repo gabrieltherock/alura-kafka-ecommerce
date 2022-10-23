@@ -15,12 +15,12 @@ public class NewOrderMain {
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         try (var producer = new KafkaProducer<String, String>(properties())) {
             for (var i = 0; i <= 100; i++) {
-                var value = "12333, 133332, 182928";
+                var value = UUID.randomUUID().toString();
                 var key = UUID.randomUUID().toString();
 
                 var producerRecord = new ProducerRecord<>("ECOMMERCE_NEW_ORDER", key, value);
 
-                var email = "Welcome! We are processing your order.";
+                var email = String.format("Welcome! We are processing your order. [%s]", UUID.randomUUID());
                 var emailRecord = new ProducerRecord<>("ECOMMERCE_SEND_EMAIL", key, email);
 
                 Callback callback = (data, e) -> {
@@ -28,8 +28,8 @@ public class NewOrderMain {
                         e.printStackTrace();
                         return;
                     }
-                    System.out.println("SUCESSO --> " + data.topic() + ":::partition " + data.partition() + "/ offset "
-                            + data.offset() + "/ " + data.timestamp());
+                    System.out.println("SUCESSO --> " + data.topic() + ":::partition " + data.partition() + "/offset "
+                            + data.offset() + "/" + data.timestamp());
                 };
 
                 producer.send(producerRecord, callback).get();

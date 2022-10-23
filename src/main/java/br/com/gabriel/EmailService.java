@@ -1,48 +1,23 @@
 package br.com.gabriel;
 
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.serialization.StringDeserializer;
-
-import java.time.Duration;
-import java.util.Collections;
-import java.util.Properties;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public class EmailService {
 
-    public static void main(String[] args) throws InterruptedException {
-        try (var kafkaConsumer = new KafkaConsumer<String, String>(properties())) {
-            kafkaConsumer.subscribe(Collections.singleton("ECOMMERCE_SEND_EMAIL"));
+    public static void main(String[] args) {
+        var emailService = new EmailService();
+        var kafkaService = new KafkaService(EmailService.class.getSimpleName(), "ECOMMERCE_SEND_EMAIL", emailService::parse);
 
-            while (true) {
-                var newOrderRecords = kafkaConsumer.poll(Duration.ofMillis(100));
-
-                if (newOrderRecords.isEmpty())
-                    continue;
-
-                System.out.println("Encontrei " + newOrderRecords.count() + " registros e vou processa-los...");
-                for (var newOrderRecord : newOrderRecords) {
-                    System.out.println("--------------------------------------------");
-                    System.out.println("Seniding email...");
-                    System.out.println(newOrderRecord.key());
-                    System.out.println(newOrderRecord.value());
-                    System.out.println(newOrderRecord.partition());
-                    System.out.println(newOrderRecord.offset());
-                    System.out.println("--------------------------------------------");
-                    Thread.sleep(5000);
-                }
-            }
-        }
+        kafkaService.run();
     }
 
-    private static Properties properties() {
-        var properties = new Properties();
-
-        properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092");
-        properties.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        properties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        properties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, EmailService.class.getSimpleName());
-
-        return properties;
+    private void parse(ConsumerRecord<String, String> consumerRecord) {
+        System.out.println("----------------------------------------------");
+        System.out.println("Enviando email...");
+        System.out.println("KEY --> " + consumerRecord.key());
+        System.out.println("VALUE --> " + consumerRecord.value());
+        System.out.println("PARTITION --> " + consumerRecord.partition());
+        System.out.println("OFFSET --> " + consumerRecord.offset());
+        System.out.println("----------------------------------------------");
     }
 }

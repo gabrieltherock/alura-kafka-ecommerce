@@ -6,9 +6,9 @@ public class LogService {
 
     public static void main(String[] args) {
         var logService = new LogService();
-        var kafkaService = new KafkaService(LogService.class.getSimpleName(), "ECOMMERCE_SEND_EMAIL", logService::parse);
-
-        kafkaService.run();
+        try (var kafkaService = new KafkaService(LogService.class.getSimpleName(), "ECOMMERCE_SEND_EMAIL", logService::parse)) {
+            kafkaService.run();
+        }
     }
 
     private void parse(ConsumerRecord<String, String> consumerRecord) {

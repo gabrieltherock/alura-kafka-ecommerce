@@ -9,31 +9,29 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class KafkaService implements Closeable {
 
     private final KafkaConsumer<String, String> kafkaConsumer;
     private final ConsumerFunction consumerFunction;
+    private boolean isOpen;
 
     public KafkaService(String groupId, String topic, ConsumerFunction consumerFunction) {
         this.kafkaConsumer = new KafkaConsumer<>(properties(groupId));
         this.kafkaConsumer.subscribe(Collections.singleton(topic));
         this.consumerFunction = consumerFunction;
+        this.isOpen = true;
     }
 
     public void run() {
-        ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
-        executorService.scheduleAtFixedRate(() -> {
+        while (isOpen) {
             var consumerRecords = kafkaConsumer.poll(Duration.ofMillis(100));
 
             if (!consumerRecords.isEmpty()) {
                 System.out.printf("Encontrei %s registro(s) e vou processá-los.%n", consumerRecords.count());
                 consumerRecords.forEach(consumerFunction::consume);
             }
-        }, 0, 1, TimeUnit.MILLISECONDS);
+        }
     }
 
     private Properties properties(String groupId) {
@@ -49,6 +47,7 @@ public class KafkaService implements Closeable {
 
     @Override
     public void close() {
+        isOpen = false;
         kafkaConsumer.close();
     }
 }

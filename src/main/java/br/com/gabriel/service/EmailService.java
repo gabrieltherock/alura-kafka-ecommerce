@@ -4,12 +4,17 @@ import br.com.gabriel.Email;
 import br.com.gabriel.kafka.KafkaService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
+import java.util.Map;
+
 public class EmailService {
 
     public static void main(String[] args) {
         var emailService = new EmailService();
         try (var kafkaService = new KafkaService<>(EmailService.class.getSimpleName(),
-                "ECOMMERCE_SEND_EMAIL", emailService::parse, Email.class)) {
+                "ECOMMERCE_SEND_EMAIL",
+                emailService::parse,
+                Email.class,
+                Map.of())) {
             kafkaService.run();
         }
     }

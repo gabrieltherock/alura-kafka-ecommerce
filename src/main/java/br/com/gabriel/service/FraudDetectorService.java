@@ -4,12 +4,17 @@ import br.com.gabriel.Order;
 import br.com.gabriel.kafka.KafkaService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
+import java.util.Map;
+
 public class FraudDetectorService {
 
     public static void main(String[] args) {
         var fraudDetectorService = new FraudDetectorService();
         try (var kafkaService = new KafkaService<>(FraudDetectorService.class.getSimpleName(),
-                "ECOMMERCE_NEW_ORDER", fraudDetectorService::parse, Order.class)) {
+                "ECOMMERCE_NEW_ORDER",
+                fraudDetectorService::parse,
+                Order.class,
+                Map.of())) {
             kafkaService.run();
         }
     }

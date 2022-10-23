@@ -7,29 +7,34 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 public class NewOrderMain {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         try (var producer = new KafkaProducer<String, String>(properties())) {
-            var value = "12333, 133332, 182928";
-            var producerRecord = new ProducerRecord<>("ECOMMERCE_NEW_ORDER", value, value);
+            for (var i = 0; i <= 100; i++) {
+                var value = "12333, 133332, 182928";
+                var key = UUID.randomUUID().toString();
 
-            var email = "Welcome! We are processing your order.";
-            var emailRecord = new ProducerRecord<>("ECOMMERCE_SEND_EMAIL", email, email);
+                var producerRecord = new ProducerRecord<>("ECOMMERCE_NEW_ORDER", key, value);
 
-            Callback callback = (data, e) -> {
-                if (e != null) {
-                    e.printStackTrace();
-                    return;
-                }
-                System.out.println("SUCESSO --> " + data.topic() + ":::partition " + data.partition() + "/ offset "
-                        + data.offset() + "/ " + data.timestamp());
-            };
+                var email = "Welcome! We are processing your order.";
+                var emailRecord = new ProducerRecord<>("ECOMMERCE_SEND_EMAIL", key, email);
 
-            producer.send(producerRecord, callback).get();
-            producer.send(emailRecord, callback).get();
+                Callback callback = (data, e) -> {
+                    if (e != null) {
+                        e.printStackTrace();
+                        return;
+                    }
+                    System.out.println("SUCESSO --> " + data.topic() + ":::partition " + data.partition() + "/ offset "
+                            + data.offset() + "/ " + data.timestamp());
+                };
+
+                producer.send(producerRecord, callback).get();
+                producer.send(emailRecord, callback).get();
+            }
         }
     }
 

@@ -1,12 +1,17 @@
-package br.com.gabriel;
+package br.com.gabriel.service;
 
+import br.com.gabriel.kafka.KafkaService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 public class LogService {
 
     public static void main(String[] args) {
         var logService = new LogService();
-        try (var kafkaService = new KafkaService(LogService.class.getSimpleName(), "ECOMMERCE_SEND_EMAIL", logService::parse)) {
+        try (var kafkaService = new KafkaService(LogService.class.getSimpleName(), "ECOMMERCE_NEW_ORDER", logService::parse)) {
             kafkaService.run();
         }
     }
@@ -18,6 +23,7 @@ public class LogService {
         System.out.println("VALUE --> " + consumerRecord.value());
         System.out.println("PARTITION --> " + consumerRecord.partition());
         System.out.println("OFFSET --> " + consumerRecord.offset());
+        System.out.printf("DATA --> '%s'", LocalDateTime.ofInstant(Instant.ofEpochMilli(consumerRecord.timestamp()), ZoneId.systemDefault()));
         System.out.println("--------------------------------------------");
     }
 }

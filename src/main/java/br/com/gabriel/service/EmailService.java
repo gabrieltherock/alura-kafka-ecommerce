@@ -1,5 +1,6 @@
-package br.com.gabriel;
+package br.com.gabriel.service;
 
+import br.com.gabriel.kafka.KafkaService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public class EmailService {

@@ -1,4 +1,4 @@
-package br.com.gabriel;
+package br.com.gabriel.kafka;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 

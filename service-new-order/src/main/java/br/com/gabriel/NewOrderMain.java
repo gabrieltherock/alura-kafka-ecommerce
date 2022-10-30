@@ -16,6 +16,7 @@ public class NewOrderMain {
                             .orderId(key)
                             .userId(UUID.randomUUID().toString())
                             .value(BigDecimal.valueOf(Math.random() * 5000 + 1))
+                            .email(Math.random() + "@outlook.com")
                             .build();
                     orderKafkaDispatcher.send("ECOMMERCE_NEW_ORDER", key, orderValue);
 

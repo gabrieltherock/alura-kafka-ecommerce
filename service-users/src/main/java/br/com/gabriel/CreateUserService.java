@@ -16,6 +16,8 @@ public class CreateUserService {
         connection = DriverManager.getConnection(url);
         try (var statemanent = connection.createStatement()) {
             statemanent.execute("create table Users (uuid varchar(200) primary key, email varchar(200))");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -40,19 +42,19 @@ public class CreateUserService {
 
         var order = consumerRecord.value();
         if (isNewUser(order.getEmail())) {
-            insertNewUser(order.getEmail());
+            insertNewUser(order.getUserId(), order.getEmail());
         }
         System.out.println("---------------------------------------------");
     }
 
-    private void insertNewUser(String email) throws SQLException {
+    private void insertNewUser(String uuid, String email) throws SQLException {
         try (var insert = connection.prepareStatement("insert into Users (uuid, email) values (?, ?)")) {
-            insert.setString(1, "uuid");
-            insert.setString(2, "email");
+            insert.setString(1, uuid);
+            insert.setString(2, email);
             insert.execute();
         }
 
-        System.out.printf("Usuário [%s] adicionado!", email);
+        System.out.printf("Usuário [%s] adicionado!%n", email);
     }
 
     private boolean isNewUser(String email) throws SQLException {

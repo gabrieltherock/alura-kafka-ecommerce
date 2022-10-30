@@ -32,10 +32,10 @@ public class FraudDetectorService {
         var order = consumerRecord.value();
         if (isFraud(order)) {
             System.out.printf("Valor de R$ %s é mais alto que o normal%n", order.getValue());
-            kafkaDispatcher.send("ECOMMERCE_ORDER_REJECTED", order.getUserId(), order);
+            kafkaDispatcher.send("ECOMMERCE_ORDER_REJECTED", order.getEmail(), order);
         } else {
             System.out.println("Pedido aprovado!");
-            kafkaDispatcher.send("ECOMMERCE_ORDER_APROVED", order.getUserId(), order);
+            kafkaDispatcher.send("ECOMMERCE_ORDER_APROVED", order.getEmail(), order);
         }
 
         System.out.println("---------------------------------------------");

@@ -12,4 +12,5 @@ public class Order {
     private final String userId;
     private final String orderId;
     private final BigDecimal value;
+    private final String email;
 }

@@ -44,7 +44,13 @@ public class KafkaService<T> implements Closeable {
 
             if (!consumerRecords.isEmpty()) {
                 System.out.printf("Encontrei %s registro(s) e vou processá-los.%n", consumerRecords.count());
-                consumerRecords.forEach(consumerFunction::consume);
+                consumerRecords.forEach(consumerRecord -> {
+                    try {
+                        consumerFunction.consume(consumerRecord);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
             }
         }
     }

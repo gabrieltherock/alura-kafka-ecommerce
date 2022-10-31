@@ -12,7 +12,7 @@ public class CreateUserService {
     private final Connection connection;
 
     CreateUserService() throws SQLException {
-        String url = "jdbc:sqlite:target/users_database.db";
+        String url = "jdbc:sqlite:users_database.db";
         connection = DriverManager.getConnection(url);
         try (var statemanent = connection.createStatement()) {
             statemanent.execute("create table Users (uuid varchar(200) primary key, email varchar(200))");

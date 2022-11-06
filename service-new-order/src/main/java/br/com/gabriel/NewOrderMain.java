@@ -18,10 +18,10 @@ public class NewOrderMain {
                             .value(BigDecimal.valueOf(Math.random() * 5000 + 1))
                             .email(Math.random() + "@outlook.com")
                             .build();
-                    orderKafkaDispatcher.send("ECOMMERCE_NEW_ORDER", key, orderValue);
+                    orderKafkaDispatcher.send("ECOMMERCE_NEW_ORDER", key, new CorrelationId(NewOrderMain.class.getSimpleName()), orderValue);
 
                     var emailValue = String.format("Welcome! We are processing your order. [%s]", UUID.randomUUID());
-                    emailKafkaDispatcher.send("ECOMMERCE_SEND_EMAIL", key, emailValue);
+                    emailKafkaDispatcher.send("ECOMMERCE_SEND_EMAIL", key, new CorrelationId(NewOrderMain.class.getSimpleName()), emailValue);
                 }
             }
         }

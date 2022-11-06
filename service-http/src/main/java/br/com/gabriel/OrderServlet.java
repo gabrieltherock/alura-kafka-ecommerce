@@ -11,13 +11,11 @@ import java.util.UUID;
 public class OrderServlet extends HttpServlet {
 
     private final KafkaDispatcher<Order> orderKafkaDispatcher = new KafkaDispatcher<>();
-    private final KafkaDispatcher<String> emailKafkaDispatcher = new KafkaDispatcher<>();
 
     @Override
     public void destroy() {
         super.destroy();
         orderKafkaDispatcher.close();
-        emailKafkaDispatcher.close();
     }
 
     @Override
@@ -34,9 +32,6 @@ public class OrderServlet extends HttpServlet {
                     .email(email)
                     .build();
             orderKafkaDispatcher.send("ECOMMERCE_NEW_ORDER", key, new CorrelationId(OrderServlet.class.getSimpleName()), orderValue);
-
-            var emailValue = String.format("Welcome! We are processing your order. [%s]", UUID.randomUUID());
-            emailKafkaDispatcher.send("ECOMMERCE_SEND_EMAIL", key, new CorrelationId(OrderServlet.class.getSimpleName()), emailValue);
 
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().println("New order sent");

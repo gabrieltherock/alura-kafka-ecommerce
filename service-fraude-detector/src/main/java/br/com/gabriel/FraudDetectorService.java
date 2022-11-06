@@ -10,7 +10,7 @@ public class FraudDetectorService {
 
     private final KafkaDispatcher<Order> kafkaDispatcher = new KafkaDispatcher<>();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
         var fraudDetectorService = new FraudDetectorService();
         try (var kafkaService = new KafkaService<>(FraudDetectorService.class.getSimpleName(),
                 "ECOMMERCE_NEW_ORDER",

@@ -1,6 +1,7 @@
 package br.com.gabriel;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
@@ -10,6 +11,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
 public class KafkaService<T> implements Closeable {
@@ -35,19 +37,24 @@ public class KafkaService<T> implements Closeable {
         this.isOpen = true;
     }
 
-    public void run() {
-        while (isOpen) {
-            var consumerRecords = kafkaConsumer.poll(Duration.ofMillis(100));
+    public void run() throws ExecutionException, InterruptedException {
+        try (var deadLetterDispatcher = new KafkaDispatcher<>()) {
+            while (isOpen) {
+                var consumerRecords = kafkaConsumer.poll(Duration.ofMillis(100));
 
-            if (!consumerRecords.isEmpty()) {
-                System.out.printf("Encontrei %s registro(s) e vou processá-los.%n", consumerRecords.count());
-                consumerRecords.forEach(consumerRecord -> {
-                    try {
-                        consumerFunction.consume(consumerRecord);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                if (!consumerRecords.isEmpty()) {
+                    System.out.printf("Encontrei %s registro(s) e vou processá-los.%n", consumerRecords.count());
+                    for (ConsumerRecord<String, Message<T>> consumerRecord : consumerRecords) {
+                        try {
+                            consumerFunction.consume(consumerRecord);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            var message = consumerRecord.value();
+                            deadLetterDispatcher.send("ECOMMERCE_DEADLETTER", message.getId().toString(), message.getId(),
+                                    new GsonSerializer<>().serialize("", message));
+                        }
                     }
-                });
+                }
             }
         }
     }

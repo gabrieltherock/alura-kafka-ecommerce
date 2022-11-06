@@ -1,5 +1,7 @@
-package br.com.gabriel;
+package br.com.gabriel.dispatcher;
 
+import br.com.gabriel.CorrelationId;
+import br.com.gabriel.Message;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -35,7 +37,7 @@ public class KafkaDispatcher<T> implements Closeable {
     }
 
     public Future<RecordMetadata> sendAsync(String topic, String key, CorrelationId id, T payload) {
-        var value = new Message<>(id, payload);
+        var value = new Message<>(id.continueWith("_" + topic), payload);
         var producerRecord = new ProducerRecord<>(topic, key, value);
 
         Callback callback = (data, e) -> {

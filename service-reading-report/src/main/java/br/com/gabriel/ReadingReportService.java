@@ -1,5 +1,6 @@
 package br.com.gabriel;
 
+import br.com.gabriel.consumer.KafkaService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.io.File;

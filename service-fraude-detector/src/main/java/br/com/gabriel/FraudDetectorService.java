@@ -1,5 +1,7 @@
 package br.com.gabriel;
 
+import br.com.gabriel.consumer.KafkaService;
+import br.com.gabriel.dispatcher.KafkaDispatcher;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.math.BigDecimal;

@@ -1,5 +1,8 @@
-package br.com.gabriel;
+package br.com.gabriel.consumer;
 
+import br.com.gabriel.Message;
+import br.com.gabriel.dispatcher.GsonSerializer;
+import br.com.gabriel.dispatcher.KafkaDispatcher;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -50,8 +53,10 @@ public class KafkaService<T> implements Closeable {
                         } catch (Exception e) {
                             e.printStackTrace();
                             var message = consumerRecord.value();
-                            deadLetterDispatcher.send("ECOMMERCE_DEADLETTER", message.getId().toString(), message.getId(),
-                                    new GsonSerializer<>().serialize("", message));
+                            try (GsonSerializer<Message<T>> gsonSerializer = new GsonSerializer<>()) {
+                                deadLetterDispatcher.send("ECOMMERCE_DEADLETTER", message.getId().toString(), message.getId(),
+                                        gsonSerializer.serialize("", message));
+                            }
                         }
                     }
                 }

@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 public class BatchSendMessageService {
 
@@ -35,7 +34,7 @@ public class BatchSendMessageService {
         }
     }
 
-    private void parse(ConsumerRecord<String, Message<String>> consumerRecord) throws ExecutionException, InterruptedException, SQLException {
+    private void parse(ConsumerRecord<String, Message<String>> consumerRecord) throws SQLException {
         System.out.println("---------------------------------------------");
         System.out.println("Processando um novo batch...");
         System.out.println("TOPIC --> " + consumerRecord.value());
@@ -43,7 +42,7 @@ public class BatchSendMessageService {
         var message = consumerRecord.value();
 
         for (User user : getAllUsers()) {
-                userKafkaDispatcher.send(message.getPayload(), user.getUuid(), message.getId().continueWith(BatchSendMessageService.class.getSimpleName()), user);
+            userKafkaDispatcher.sendAsync(message.getPayload(), user.getUuid(), message.getId().continueWith(BatchSendMessageService.class.getSimpleName()), user);
         }
         System.out.println("---------------------------------------------");
     }

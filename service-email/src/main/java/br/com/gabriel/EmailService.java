@@ -11,13 +11,12 @@ public class EmailService {
         try (var kafkaService = new KafkaService<>(EmailService.class.getSimpleName(),
                 "ECOMMERCE_SEND_EMAIL",
                 emailService::parse,
-                String.class,
                 Map.of())) {
             kafkaService.run();
         }
     }
 
-    private void parse(ConsumerRecord<String, String> consumerRecord) {
+    private void parse(ConsumerRecord<String, Message<String>> consumerRecord) {
         System.out.println("----------------------------------------------");
         System.out.println("Enviando email...");
         System.out.println("KEY --> " + consumerRecord.key());

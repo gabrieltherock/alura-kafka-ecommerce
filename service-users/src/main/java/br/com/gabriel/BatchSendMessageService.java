@@ -30,19 +30,20 @@ public class BatchSendMessageService {
         try (var kafkaService = new KafkaService<>(BatchSendMessageService.class.getSimpleName(),
                 "SEND_MESSAGE_TO_ALL_USERS",
                 batchSendMessageService::parse,
-                String.class,
                 Map.of())) {
             kafkaService.run();
         }
     }
 
-    private void parse(ConsumerRecord<String, String> consumerRecord) throws ExecutionException, InterruptedException, SQLException {
+    private void parse(ConsumerRecord<String, Message<String>> consumerRecord) throws ExecutionException, InterruptedException, SQLException {
         System.out.println("---------------------------------------------");
         System.out.println("Processando um novo batch...");
         System.out.println("TOPIC --> " + consumerRecord.value());
 
+        var message = consumerRecord.value();
+
         for (User user : getAllUsers()) {
-                userKafkaDispatcher.send(consumerRecord.value(), user.getUuid(), user);
+                userKafkaDispatcher.send(message.getPayload(), user.getUuid(), user);
         }
         System.out.println("---------------------------------------------");
     }

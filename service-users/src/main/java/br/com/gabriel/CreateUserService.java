@@ -26,13 +26,12 @@ public class CreateUserService {
         try (var kafkaService = new KafkaService<>(CreateUserService.class.getSimpleName(),
                 "ECOMMERCE_NEW_ORDER",
                 createUserService::parse,
-                Order.class,
                 Map.of())) {
             kafkaService.run();
         }
     }
 
-    private void parse(ConsumerRecord<String, Order> consumerRecord) throws SQLException {
+    private void parse(ConsumerRecord<String, Message<Order>> consumerRecord) throws SQLException {
         System.out.println("---------------------------------------------");
         System.out.println("Processando um novo pedido... Verificando usuário");
         System.out.println("KEY --> " + consumerRecord.key());
@@ -40,7 +39,7 @@ public class CreateUserService {
         System.out.println("PARTITION --> " + consumerRecord.partition());
         System.out.println("OFFSET --> " + consumerRecord.offset());
 
-        var order = consumerRecord.value();
+        var order = consumerRecord.value().getPayload();
         if (isNewUser(order.getEmail())) {
             insertNewUser(order.getUserId(), order.getEmail());
         }

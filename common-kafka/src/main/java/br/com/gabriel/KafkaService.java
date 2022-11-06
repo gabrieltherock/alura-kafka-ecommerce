@@ -14,26 +14,23 @@ import java.util.regex.Pattern;
 
 public class KafkaService<T> implements Closeable {
 
-    private final KafkaConsumer<String, T> kafkaConsumer;
+    private final KafkaConsumer<String, Message<T>> kafkaConsumer;
     private final ConsumerFunction<T> consumerFunction;
 
     private boolean isOpen;
 
-    public KafkaService(String groupId, String topic, ConsumerFunction<T> consumerFunction, Class<T> deserializeClass,
-                        Map<String, String> additionalProperties) {
-        this(groupId, consumerFunction, deserializeClass, additionalProperties);
+    public KafkaService(String groupId, String topic, ConsumerFunction<T> consumerFunction, Map<String, String> additionalProperties) {
+        this(groupId, consumerFunction, additionalProperties);
         this.kafkaConsumer.subscribe(Collections.singleton(topic));
     }
 
-    public KafkaService(String groupId, Pattern topic, ConsumerFunction<T> consumerFunction, Class<T> deserializeClass,
-                        Map<String, String> additionalProperties) {
-        this(groupId, consumerFunction, deserializeClass, additionalProperties);
+    public KafkaService(String groupId, Pattern topic, ConsumerFunction<T> consumerFunction, Map<String, String> additionalProperties) {
+        this(groupId, consumerFunction, additionalProperties);
         this.kafkaConsumer.subscribe(topic);
     }
 
-    private KafkaService(String groupId, ConsumerFunction<T> consumerFunction, Class<T> deserializeClass,
-                         Map<String, String> additionalProperties) {
-        this.kafkaConsumer = new KafkaConsumer<>(properties(groupId, deserializeClass, additionalProperties));
+    private KafkaService(String groupId, ConsumerFunction<T> consumerFunction, Map<String, String> additionalProperties) {
+        this.kafkaConsumer = new KafkaConsumer<>(properties(groupId, additionalProperties));
         this.consumerFunction = consumerFunction;
         this.isOpen = true;
     }
@@ -55,7 +52,7 @@ public class KafkaService<T> implements Closeable {
         }
     }
 
-    private Properties properties(String groupId, Class<T> deserializeClass, Map<String, String> additionalProperties) {
+    private Properties properties(String groupId, Map<String, String> additionalProperties) {
         var properties = new Properties();
         properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092");
         properties.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
@@ -63,7 +60,6 @@ public class KafkaService<T> implements Closeable {
         properties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         properties.setProperty(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "1");
         properties.setProperty(ConsumerConfig.CLIENT_ID_CONFIG, UUID.randomUUID().toString());
-        properties.setProperty(GsonDeserializer.TYPE_CONFIG, deserializeClass.getName());
         properties.putAll(additionalProperties);
         return properties;
     }

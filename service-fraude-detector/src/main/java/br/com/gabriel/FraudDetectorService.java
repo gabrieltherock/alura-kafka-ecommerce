@@ -15,13 +15,12 @@ public class FraudDetectorService {
         try (var kafkaService = new KafkaService<>(FraudDetectorService.class.getSimpleName(),
                 "ECOMMERCE_NEW_ORDER",
                 fraudDetectorService::parse,
-                Order.class,
                 Map.of())) {
             kafkaService.run();
         }
     }
 
-    private void parse(ConsumerRecord<String, Order> consumerRecord) throws ExecutionException, InterruptedException {
+    private void parse(ConsumerRecord<String, Message<Order>> consumerRecord) throws ExecutionException, InterruptedException {
         System.out.println("---------------------------------------------");
         System.out.println("Processando um novo pedido...");
         System.out.println("KEY --> " + consumerRecord.key());
@@ -29,7 +28,7 @@ public class FraudDetectorService {
         System.out.println("PARTITION --> " + consumerRecord.partition());
         System.out.println("OFFSET --> " + consumerRecord.offset());
 
-        var order = consumerRecord.value();
+        var order = consumerRecord.value().getPayload();
         if (isFraud(order)) {
             System.out.printf("Valor de R$ %s é mais alto que o normal%n", order.getValue());
             kafkaDispatcher.send("ECOMMERCE_ORDER_REJECTED", order.getEmail(), order);

@@ -1,4 +1,4 @@
-package br.com.gabriel;
+package br.com.gabriel.consumer;
 
 public interface ServiceFactory<T> {
 

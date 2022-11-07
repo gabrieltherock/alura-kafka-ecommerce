@@ -1,29 +1,22 @@
 package br.com.gabriel;
 
-import br.com.gabriel.consumer.KafkaService;
+import br.com.gabriel.consumer.ConsumerService;
+import br.com.gabriel.consumer.ServiceRunner;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
-public class ReadingReportService {
+public class ReadingReportService implements ConsumerService<User> {
 
     private static final Path SOURCE = new File("src/main/resources/report.txt").toPath();
 
-    public static void main(String[] args) throws ExecutionException, InterruptedException {
-        var readingReportService = new ReadingReportService();
-        try (var kafkaService = new KafkaService<>(ReadingReportService.class.getSimpleName(),
-                "ECOMMERCE_USER_GENERATE_READING_REPORT",
-                readingReportService::parse,
-                Map.of())) {
-            kafkaService.run();
-        }
+    public static void main(String[] args) {
+        new ServiceRunner<>(ReadingReportService::new).start(5);
     }
 
-    private void parse(ConsumerRecord<String, Message<User>> consumerRecord) throws IOException {
+    public void parse(ConsumerRecord<String, Message<User>> consumerRecord) throws IOException {
         System.out.println("---------------------------------------------");
         System.out.println("Processing report for new value --> " + consumerRecord.value());
 
@@ -33,5 +26,15 @@ public class ReadingReportService {
         IO.append(target, "Created for user " + user.getUuid());
 
         System.out.println("File created --> " + target.getAbsolutePath());
+    }
+
+    @Override
+    public String getTopic() {
+        return "ECOMMERCE_USER_GENERATE_READING_REPORT";
+    }
+
+    @Override
+    public String getConsumerGroup() {
+        return ReadingReportService.class.getSimpleName();
     }
 }

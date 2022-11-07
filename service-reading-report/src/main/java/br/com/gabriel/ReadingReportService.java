@@ -16,6 +16,7 @@ public class ReadingReportService implements ConsumerService<User> {
         new ServiceRunner<>(ReadingReportService::new).start(5);
     }
 
+    @Override
     public void parse(ConsumerRecord<String, Message<User>> consumerRecord) throws IOException {
         System.out.println("---------------------------------------------");
         System.out.println("Processing report for new value --> " + consumerRecord.value());

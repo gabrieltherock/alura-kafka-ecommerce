@@ -10,6 +10,7 @@ public class EmailService implements ConsumerService<String> {
         new ServiceRunner<>(EmailService::new).start(5);
     }
 
+    @Override
     public void parse(ConsumerRecord<String, Message<String>> consumerRecord) {
         System.out.println("----------------------------------------------");
         System.out.println("Enviando email...");

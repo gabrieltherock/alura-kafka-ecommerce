@@ -4,22 +4,16 @@ import br.com.gabriel.consumer.ConsumerService;
 import br.com.gabriel.consumer.ServiceRunner;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.UUID;
 
 public class CreateUserService implements ConsumerService<Order> {
 
-    private final Connection connection;
+    private final LocalDatabase database;
 
     CreateUserService() throws SQLException {
-        String url = "jdbc:sqlite:users_database.db";
-        connection = DriverManager.getConnection(url);
-        try (var statemanent = connection.createStatement()) {
-            statemanent.execute("create table Users (uuid varchar(200) primary key, email varchar(200))");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        this.database = new LocalDatabase("users_database");
+        this.database.createIfExists("create table Users (uuid varchar(200) primary key, email varchar(200))");
     }
 
     public static void main(String[] args) {
@@ -37,7 +31,7 @@ public class CreateUserService implements ConsumerService<Order> {
 
         var order = consumerRecord.value().getPayload();
         if (isNewUser(order.getEmail())) {
-            insertNewUser(order.getUserId(), order.getEmail());
+            insertNewUser(order.getEmail());
         }
         System.out.println("---------------------------------------------");
     }
@@ -52,23 +46,17 @@ public class CreateUserService implements ConsumerService<Order> {
         return CreateUserService.class.getSimpleName();
     }
 
-    private void insertNewUser(String uuid, String email) throws SQLException {
-        try (var insert = connection.prepareStatement("insert into Users (uuid, email) values (?, ?)")) {
-            insert.setString(1, uuid);
-            insert.setString(2, email);
-            insert.execute();
-        }
-
-        System.out.printf("Usuário [%s] adicionado!%n", email);
+    private void insertNewUser(String email) throws SQLException {
+        var uuid = UUID.randomUUID().toString();
+        database.update("insert into Users (uuid, email) " +
+                "values (?,?)", uuid, email);
+        System.out.println("Usuário " + uuid + " e " + email + " adicionado");
     }
 
     private boolean isNewUser(String email) throws SQLException {
-        try (var select = connection.prepareStatement("select uuid from Users u where u.email = ? limit 1")) {
-            select.setString(1, email);
-            var results = select.executeQuery();
-
-            return !results.next();
-        }
+        var results = database.query("select uuid from Users " +
+                "where email = ? limit 1", email);
+        return !results.next();
     }
 
 }

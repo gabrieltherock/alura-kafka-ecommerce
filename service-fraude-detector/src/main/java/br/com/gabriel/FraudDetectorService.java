@@ -1,47 +1,84 @@
 package br.com.gabriel;
 
-import br.com.gabriel.consumer.KafkaService;
+import br.com.gabriel.consumer.ConsumerService;
+import br.com.gabriel.consumer.ServiceRunner;
 import br.com.gabriel.dispatcher.KafkaDispatcher;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.math.BigDecimal;
-import java.util.Map;
+import java.sql.SQLException;
 import java.util.concurrent.ExecutionException;
 
-public class FraudDetectorService {
+public class FraudDetectorService implements ConsumerService<Order> {
 
-    private final KafkaDispatcher<Order> kafkaDispatcher = new KafkaDispatcher<>();
+    private final KafkaDispatcher<Order> orderDispatcher = new KafkaDispatcher<>();
 
-    public static void main(String[] args) throws ExecutionException, InterruptedException {
-        var fraudDetectorService = new FraudDetectorService();
-        try (var kafkaService = new KafkaService<>(FraudDetectorService.class.getSimpleName(),
-                "ECOMMERCE_NEW_ORDER",
-                fraudDetectorService::parse,
-                Map.of())) {
-            kafkaService.run();
-        }
+    private final LocalDatabase database;
+
+    FraudDetectorService() throws SQLException {
+        this.database = new LocalDatabase("frauds_database");
+        this.database.createIfNotExists("create table Orders (" +
+                "uuid varchar(200) primary key," +
+                "is_fraud boolean)");
     }
 
-    private void parse(ConsumerRecord<String, Message<Order>> consumerRecord) throws ExecutionException, InterruptedException {
-        System.out.println("---------------------------------------------");
-        System.out.println("Processando um novo pedido...");
-        System.out.println("KEY --> " + consumerRecord.key());
-        System.out.println("VALUE --> " + consumerRecord.value());
-        System.out.println("PARTITION --> " + consumerRecord.partition());
-        System.out.println("OFFSET --> " + consumerRecord.offset());
+    @Override
+    public String getTopic() {
+        return "ECOMMERCE_NEW_ORDER";
+    }
 
-        var order = consumerRecord.value().getPayload();
-        if (isFraud(order)) {
-            System.out.printf("Valor de R$ %s é mais alto que o normal%n", order.getValue());
-            kafkaDispatcher.send("ECOMMERCE_ORDER_REJECTED", order.getEmail(),
-                    consumerRecord.value().getId().continueWith(FraudDetectorService.class.getSimpleName()), order);
-        } else {
-            System.out.println("Pedido aprovado!");
-            kafkaDispatcher.send("ECOMMERCE_ORDER_APROVED", order.getEmail(),
-                    consumerRecord.value().getId().continueWith(FraudDetectorService.class.getSimpleName()), order);
+    @Override
+    public String getConsumerGroup() {
+        return FraudDetectorService.class.getSimpleName();
+    }
+
+    public static void main(String[] args) {
+        new ServiceRunner<>(FraudDetectorService::new).start(1);
+    }
+
+    @Override
+    public void parse(ConsumerRecord<String, Message<Order>> consumerRecord) throws ExecutionException, InterruptedException, SQLException {
+        System.out.println("------------------------------------------");
+        System.out.println("Processing new order, checking for fraud");
+        System.out.println(consumerRecord.key());
+        System.out.println(consumerRecord.value());
+        System.out.println(consumerRecord.partition());
+        System.out.println(consumerRecord.offset());
+
+        var message = consumerRecord.value();
+        var order = message.getPayload();
+        if(wasProcessed(order)) {
+            System.out.println("Order " + order.getOrderId() + " was already processed");
+            return;
         }
 
-        System.out.println("---------------------------------------------");
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            // ignoring
+            e.printStackTrace();
+        }
+
+        if(isFraud(order)) {
+            database.update("insert into Orders (uuid,is_fraud) values (?,true)", order.getOrderId());
+            // pretending that the fraud happens when the amount is >= 4500
+            System.out.println("Order is a fraud!!!!!" + order);
+            orderDispatcher.send("ECOMMERCE_ORDER_REJECTED", order.getEmail(),
+                    message.getId().continueWith(FraudDetectorService.class.getSimpleName()),
+                    order);
+        } else {
+            database.update("insert into Orders (uuid,is_fraud) values (?,false)", order.getOrderId());
+            System.out.println("Approved: " + order);
+            orderDispatcher.send("ECOMMERCE_ORDER_APPROVED", order.getEmail(),
+                    message.getId().continueWith(FraudDetectorService.class.getSimpleName()),
+                    order);
+        }
+
+    }
+
+    private boolean wasProcessed(Order order) throws SQLException {
+        var results = database.query("select uuid from Orders where uuid = ? limit 1", order.getOrderId());
+        return results.next();
     }
 
     private boolean isFraud(Order order) {

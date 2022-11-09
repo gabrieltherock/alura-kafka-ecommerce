@@ -13,7 +13,7 @@ public class CreateUserService implements ConsumerService<Order> {
 
     CreateUserService() throws SQLException {
         this.database = new LocalDatabase("users_database");
-        this.database.createIfExists("create table Users (uuid varchar(200) primary key, email varchar(200))");
+        this.database.createIfNotExists("create table Users (uuid varchar(200) primary key, email varchar(200))");
     }
 
     public static void main(String[] args) {

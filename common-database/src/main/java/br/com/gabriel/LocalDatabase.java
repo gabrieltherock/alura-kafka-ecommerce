@@ -15,7 +15,7 @@ public class LocalDatabase {
         connection = DriverManager.getConnection(url);
     }
 
-    public void createIfExists(String sql) {
+    public void createIfNotExists(String sql) {
         try (var statemanent = connection.createStatement()) {
             statemanent.execute(sql);
         } catch (Exception e) {
@@ -38,8 +38,6 @@ public class LocalDatabase {
     }
 
     public ResultSet query(String query, String... params) throws SQLException {
-        try (var preparedStatement = prepare(query, params)){
-            return preparedStatement.executeQuery();
-        }
+        return prepare(query, params).executeQuery();
     }
 }
